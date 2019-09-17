@@ -26,7 +26,7 @@ function create() {
 
     var greenScreenElementWidth;
     var background;
-    var currentDraggableDetail = { detail: null, x: 0, y: 0 ,name:null};
+    var currentDraggableDetail = { detail: null, x: 0, y: 0, name: null };
     var screensArray = [];
     var holeSpritesArray = [];
     var holesContentArray = [];
@@ -34,6 +34,11 @@ function create() {
     var holesContainer = sceneHref.add.container(0, 0);
     var tilesContainer = sceneHref.add.container(0, 0);
     var objectiveArray = [];
+    var counter1_txt;
+    var counter2_txt;
+    var lamp1;
+    var lamp2;
+    var checkBtn;
     var detailsMap = new Map([
         ["circle", "figure-circle.png"],
         ["cross", "figure-cross.png"],
@@ -45,11 +50,6 @@ function create() {
     setupGameScene();
     setupObjective();
 
-
-        const helloButton = this.add.text(100, 100, 'Hello Phaser!', { fill: '#0f0' });
-        helloButton.setInteractive();
-
-
     function setupObjective() {
         for (let i = 0; i < numOfItems; i++) {
             var items = Array.from(detailsMap);
@@ -59,34 +59,97 @@ function create() {
     }
 
     function showSolution() {
+        //console.log("show solution function");
         for (let i = 0; i < screensArray.length; i++) {
             changeGreenIcon(screensArray[i].iconsMap, objectiveArray[i]);
         }
     }
 
     function testCondition() {
-        //проверка условия победы
-        // return array[1,2,3];
+        var result = [0, 0];
+        for (let i = 0; i < holesContentArray.length; i++) {
+            if (objectiveArray[i] == holesContentArray[i]) {
+                result[0] += 1;
+            }
+        }
+        var tempArray = [];
+        for (let k = 0; k < holesContentArray.length; k++) {
+            var flag = true;
+            if (tempArray.length > 0) {
+                for (let n = 0; n < tempArray.length; n++) {
+                    if (holesContentArray[k] == tempArray[n]) {
+                        flag = false;
+                    }
+                }
+            }
+            if (flag) {
+                for (let j = 0; j < objectiveArray.length; j++) {
+                    if (objectiveArray[j] == holesContentArray[k]) {
+                        if (k != j) {
+                            result[1] += 1;
+                        }
+                    }
+                }
+                tempArray.push(holesContentArray[k]);
+            }
+        }
+        console.log(tempArray);
+        return result;
     }
 
-    function showResultOfChecking() {
-        //вывод ответа проверки
+    function showResultOfChecking(answer) {
+        changeNumbersOnScreens(answer[0], answer[1]);
+    }
+
+    function checkHolesContentArray() {
+        var result = true;
+        for (let i = 0; i < holesContentArray.length; i++) {
+            if (holesContentArray[i] == null) {
+                result = false;
+            }
+
+        }
+        return result;
     }
 
     function checkAnswer() {
-        var answer = testCondition;
-        if (testCondition[0] == numOfItems) {
-            endGame();
+
+        if (checkHolesContentArray && holesContentArray.length == numOfItems) {
+
+            var answer = testCondition();
+            if (answer[0] == numOfItems) {
+                endGame();
+            }
+            showResultOfChecking(answer);
+        } else {
+            console.log("can NOT be checked");
         }
-        showResultOfChecking();
+    }
+
+    function changeNumbersOnScreens(new1, new2) {
+        counter1_txt.text = new1;
+        counter2_txt.text = new2;
     }
 
     function endGame() {
+
         showSolution();
     }
 
     function setupGameScene() {
+        console.log(objectiveArray);
+        sceneHref.cameras.main.setBackgroundColor('#737373');
+        counter1_txt = sceneHref.add.text(572, 165, '0', { fill: '#4de852', fontSize: '40px', fontStyle: 'bold' });
+        counter2_txt = sceneHref.add.text(635, 165, '0', { fill: '#4de852', fontSize: '40px', fontStyle: 'bold' });
         screenCenter = { "x": game.scale.width / 2, "y": game.scale.height / 2 };
+        var provod = sceneHref.add.sprite(screenCenter.x, screenCenter.y, "mainatlas", "provod.png");
+        provod.setOrigin(0, 0);
+        setNewPosition(provod, 600, 0);
+        var lamp1 = sceneHref.add.sprite(screenCenter.x, screenCenter.y, "mainatlas", "lamp-green.png");
+        var lamp2 = sceneHref.add.sprite(screenCenter.x, screenCenter.y, "mainatlas", "lamp-red.png");
+        setNewPosition(lamp1, 583, 130);
+        setNewPosition(lamp2, 648, 130);
+
         background = sceneHref.add.sprite(screenCenter.x, screenCenter.y, "mainatlas", "panel.png");
         setupScreensAndHoles();
         setDetailsArray();
@@ -96,6 +159,22 @@ function create() {
         setNewPosition(holesContainer, deltaScreens, 280);
         setNewPosition(tilesContainer, 80, 380);
         background.depth = -50;
+
+        setupCheckButton();
+    }
+
+    function setupCheckButton() {
+        checkBtn = sceneHref.add.sprite(644, 390, "mainatlas", "btn-check-up.png").setInteractive();
+
+        //this.startBtn.on('pointerover', function (event) { /* Do something when the mouse enters */ });
+        //sceneHref.startBtn.on('pointerout', function (event) { /* Do something when the mouse exits. */ });
+        checkBtn.on('pointerdown', function () {
+            checkAnswer();
+            checkBtn.setTexture("mainatlas", 'btn-check-dn.png');
+        });
+        checkBtn.on('pointerup', function () {
+            checkBtn.setTexture("mainatlas", 'btn-check-up.png');
+        });
     }
 
     function setupScreensAndHoles() {
@@ -135,7 +214,7 @@ function create() {
         tempMap.forEach(function (value, key) {
             value.name = key;
             value.setInteractive();
-            value.depth= 5;
+            value.depth = 5;
             value.x = 75 * i;
             value.y = (i % 2 * 30);
             tilesContainer.add(value);
@@ -155,11 +234,11 @@ function create() {
         gameObject.x = dragX;
         gameObject.y = dragY;
         tilesContainer.moveUp(gameObject);
-        
+
     });
 
     sceneHref.input.on('dragend', function (pointer, gameObject) {
-       
+
         var newX;
         var newY;
         for (let i = 0; i < holeSpritesArray.length; i++) {
@@ -168,8 +247,8 @@ function create() {
             var pointY = gameObject.y + tilesContainer.y;
             var centerX = hole.x + holesContainer.x;
             var centerY = hole.y + holesContainer.y;
-            
-            if (checkCoordinateRadius(pointX, pointY, centerX, centerY) && holesContentArray[i]==null) {
+
+            if (checkCoordinateRadius(pointX, pointY, centerX, centerY) && holesContentArray[i] == null) {
                 newX = centerX - tilesContainer.x;
                 newY = centerY - tilesContainer.y;
                 holesContentArray[i] = gameObject.name;
@@ -180,13 +259,13 @@ function create() {
             }
 
         }
-        moveTweenDetail(gameObject,newX,newY);
+        moveTweenDetail(gameObject, newX, newY);
         currentDraggableDetail.detail = null;
-        
+
     });
 
     function moveTweenDetail(detail, newX, newY) {
-        console.log(holesContentArray);
+        //console.log(holesContentArray);
         sceneHref.tweens.add({
             targets: detail,
             x: newX,
@@ -245,8 +324,6 @@ function create() {
 }
 
 function update() {
-
-    //checkCoordinateRadius(game.input.mousePointer.x, game.input.mousePointer.y, holeSpritesArray[1].x + holesContainer.x, holeSpritesArray[1].y + holesContainer.y);
-    //console.log(holeSpritesArray[1].x + holesContainer.x);
+    //console.log(game.input.mousePointer.x, game.input.mousePointer.y);
 }
 
