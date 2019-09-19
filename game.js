@@ -10,7 +10,7 @@ var config = {
     }
 }
 
-var numOfItems = 3;
+var numOfItems = 4;
 var game = new Phaser.Game(config);
 var screenCenter;
 var sceneHref;
@@ -39,6 +39,7 @@ function create() {
     var lamp1;
     var lamp2;
     var checkBtn;
+    var clearBtn;
     var detailsMap = new Map([
         ["circle", "figure-circle.png"],
         ["cross", "figure-cross.png"],
@@ -50,11 +51,23 @@ function create() {
     setupGameScene();
     setupObjective();
 
+    function shuffleArray(array) {
+        var tempArray = array;
+        for (let i = tempArray.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [tempArray[i], tempArray[j]] = [tempArray[j], tempArray[i]]; // eslint-disable-line no-param-reassign
+        }
+        return tempArray;
+    }
+
     function setupObjective() {
+        var itemsArray = Array.from(detailsMap);
+        //console.log(itemsArray);
+        var mixedArray = shuffleArray(itemsArray);
+        //console.log(mixedArray);
         for (let i = 0; i < numOfItems; i++) {
-            var items = Array.from(detailsMap);
-            var rndElement = items[Math.floor(Math.random() * items.length)];
-            objectiveArray.push(rndElement[0]);
+            //console.log(mixedArray[i]);
+            objectiveArray.push(mixedArray[i][0]);
         }
     }
 
@@ -66,39 +79,39 @@ function create() {
     }
 
     function testCondition() {
+
         var result = [0, 0];
-        for (let i = 0; i < holesContentArray.length; i++) {
-            if (objectiveArray[i] == holesContentArray[i]) {
-                result[0] += 1;
-            }
+        // console.log(objectiveArray.join());
+        // console.log(holesContentArray.join());
+        // console.log(objectiveArray.filter(uniqueVal));
+
+        function uniqueVal(value, index, self) {
+            return self.indexOf(value) === index;
         }
-        var tempArray = [];
-        for (let k = 0; k < holesContentArray.length; k++) {
-            var flag = true;
-            if (tempArray.length > 0) {
-                for (let n = 0; n < tempArray.length; n++) {
-                    if (holesContentArray[k] == tempArray[n]) {
-                        flag = false;
+        var uniqueObjectivesArray = objectiveArray.filter(uniqueVal);
+        for (let i = 0; i < uniqueObjectivesArray.length; i++) {
+            var objectiveElement = uniqueObjectivesArray[i];
+
+            for (let j = 0; j < holesContentArray.length; j++) {
+                var holeElement = holesContentArray[j];
+                if (holeElement == objectiveElement) {
+                    if (holeElement == objectiveArray[j]) {
+                        result[0] += 1;
+                    } else {
+                        result[1] += 1;
                     }
                 }
             }
-            if (flag) {
-                for (let j = 0; j < objectiveArray.length; j++) {
-                    if (objectiveArray[j] == holesContentArray[k]) {
-                        if (k != j) {
-                            result[1] += 1;
-                        }
-                    }
-                }
-                tempArray.push(holesContentArray[k]);
-            }
         }
-        console.log(tempArray);
+
+        //console.log(result);
         return result;
     }
 
     function showResultOfChecking(answer) {
         changeNumbersOnScreens(answer[0], answer[1]);
+        buttonTurn(checkBtn, false);
+        buttonTurn(clearBtn, true);
     }
 
     function checkHolesContentArray() {
@@ -124,6 +137,7 @@ function create() {
         } else {
             console.log("can NOT be checked");
         }
+        
     }
 
     function changeNumbersOnScreens(new1, new2) {
@@ -165,9 +179,8 @@ function create() {
 
     function setupCheckButton() {
         checkBtn = sceneHref.add.sprite(644, 390, "mainatlas", "btn-check-up.png").setInteractive();
+        clearBtn = sceneHref.add.sprite(644, 390, "mainatlas", "btn-check-up.png").setInteractive();
 
-        //this.startBtn.on('pointerover', function (event) { /* Do something when the mouse enters */ });
-        //sceneHref.startBtn.on('pointerout', function (event) { /* Do something when the mouse exits. */ });
         checkBtn.on('pointerdown', function () {
             checkAnswer();
             checkBtn.setTexture("mainatlas", 'btn-check-dn.png');
@@ -175,6 +188,20 @@ function create() {
         checkBtn.on('pointerup', function () {
             checkBtn.setTexture("mainatlas", 'btn-check-up.png');
         });
+
+        clearBtn.on('pointerdown', function () {
+            nextStep();
+            clearBtn.setTexture("mainatlas", 'btn-check-dn.png');
+        });
+        clearBtn.on('pointerup', function () {
+            clearBtn.setTexture("mainatlas", 'btn-check-up.png');
+        });
+
+        buttonTurn(clearBtn,false);
+    }
+
+    function buttonTurn(button,value){
+        button.visible = value;
     }
 
     function setupScreensAndHoles() {
@@ -215,8 +242,10 @@ function create() {
             value.name = key;
             value.setInteractive();
             value.depth = 5;
-            value.x = 75 * i;
-            value.y = (i % 2 * 30);
+            value.homeX = 75 * i;
+            value.homeY = (i % 2 * 30);
+            value.x = value.homeX;
+            value.y = value.homeY;
             tilesContainer.add(value);
             sceneHref.input.setDraggable(value);
             i += 1;
@@ -301,6 +330,18 @@ function create() {
         }
 
         return iconsArray;
+    }
+
+    function nextStep(){ 
+        buttonTurn(checkBtn, true);
+        buttonTurn(clearBtn, false);
+        for (let i = 0; i < holesContentArray.length; i++) {
+            holesContentArray[i] = null;
+        }
+        tilesContainer.iterate(moveAlldetailsBack);
+        function moveAlldetailsBack(child){
+            moveTweenDetail(child, child.homeX, child.homeY);
+        }
     }
 
     function changeGreenIcon(map, iconToShow) {
