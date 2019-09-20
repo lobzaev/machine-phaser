@@ -55,24 +55,20 @@ function create() {
         var tempArray = array;
         for (let i = tempArray.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
-            [tempArray[i], tempArray[j]] = [tempArray[j], tempArray[i]]; // eslint-disable-line no-param-reassign
+            [tempArray[i], tempArray[j]] = [tempArray[j], tempArray[i]]; 
         }
         return tempArray;
     }
 
     function setupObjective() {
         var itemsArray = Array.from(detailsMap);
-        //console.log(itemsArray);
         var mixedArray = shuffleArray(itemsArray);
-        //console.log(mixedArray);
         for (let i = 0; i < numOfItems; i++) {
-            //console.log(mixedArray[i]);
             objectiveArray.push(mixedArray[i][0]);
         }
     }
 
     function showSolution() {
-        //console.log("show solution function");
         for (let i = 0; i < screensArray.length; i++) {
             changeGreenIcon(screensArray[i].iconsMap, objectiveArray[i]);
         }
@@ -81,9 +77,6 @@ function create() {
     function testCondition() {
 
         var result = [0, 0];
-        // console.log(objectiveArray.join());
-        // console.log(holesContentArray.join());
-        // console.log(objectiveArray.filter(uniqueVal));
 
         function uniqueVal(value, index, self) {
             return self.indexOf(value) === index;
@@ -128,7 +121,7 @@ function create() {
     function checkAnswer() {
 
         if (checkHolesContentArray && holesContentArray.length == numOfItems) {
-
+            console.log();
             var answer = testCondition();
             if (answer[0] == numOfItems) {
                 endGame();
@@ -281,6 +274,7 @@ function create() {
                 newX = centerX - tilesContainer.x;
                 newY = centerY - tilesContainer.y;
                 holesContentArray[i] = gameObject.name;
+                currentDraggableDetail.detail.disableInteractive();
                 break;
             } else {
                 newX = currentDraggableDetail.x;
@@ -294,15 +288,12 @@ function create() {
     });
 
     function moveTweenDetail(detail, newX, newY) {
-        //console.log(holesContentArray);
         sceneHref.tweens.add({
             targets: detail,
             x: newX,
             y: newY,
             ease: 'Back',
             duration: 200
-            //onComplete: onCompleteHandler,
-            //onCompleteParams: [image]
         });
     }
 
@@ -323,7 +314,6 @@ function create() {
         iconsArray.set("tri", tri);
 
         for (let value of iconsArray.values()) {
-
             value.x = posX;
             screensContainer.add(value);
             value.visible = false;
@@ -341,6 +331,7 @@ function create() {
         tilesContainer.iterate(moveAlldetailsBack);
         function moveAlldetailsBack(child){
             moveTweenDetail(child, child.homeX, child.homeY);
+            child.setInteractive();
         }
     }
 
