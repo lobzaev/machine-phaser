@@ -107,21 +107,21 @@ function create() {
         buttonTurn(clearBtn, true);
     }
 
-    function checkHolesContentArray() {
-        var result = true;
-        for (let i = 0; i < holesContentArray.length; i++) {
-            if (holesContentArray[i] == null) {
-                result = false;
-            }
-
-        }
-        return result;
-    }
 
     function checkAnswer() {
 
-        if (checkHolesContentArray && holesContentArray.length == numOfItems) {
-            console.log();
+        function checkHolesArrayForEmptySlotsAndLength(){
+            var result=true;
+            var tempArray = holesContentArray.filter(n => n);
+            //console.log(tempArray+","+numOfItems)
+            if (tempArray.length != numOfItems){
+                result = false;
+            }
+            return result;
+        }
+
+        if (checkHolesArrayForEmptySlotsAndLength()) {
+            
             var answer = testCondition();
             if (answer[0] == numOfItems) {
                 endGame();
